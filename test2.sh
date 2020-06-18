@@ -1,5 +1,5 @@
 #!/bin/bash
-rm-rf /home/gitlab-runner/pipeline/branch/$CI_COMMIT_SHORT_SHA
+rm -rf /home/gitlab-runner/pipeline/branch/$CI_COMMIT_SHORT_SHA
 mkdir /home/gitlab-runner/pipeline/branch/$CI_COMMIT_SHORT_SHA
 cd  /home/gitlab-runner/pipeline/branch/$CI_COMMIT_SHORT_SHA
 git clone https://ibnabbas:5C_3Fk1MWCXsrry8djD6@gitlab.com/ibnabbas/ibn-abbas.git --branch $CI_COMMIT_REF_NAME
