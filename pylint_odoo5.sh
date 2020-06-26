@@ -21,7 +21,7 @@ cd /home/gitlab-runner/pylint/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/$CI_PROJECT_
 
 while IFS= read -r line
 do
-    echo "${blue}###################################################\n"
+    echo "$red###################################################\n"
     echo "${yellow} OCA pylint_odoo start test addon : $red line ${reset}\n"
     echo "${blue}###################################################\n"
     echo "${reset}"
