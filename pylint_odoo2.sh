@@ -25,7 +25,7 @@ do
     echo "${yellow} OCA pylint_odoo start test addon : ${green} $line ${reset}\n"
     echo "${blue}###################################################\n"
     echo "${reset}"
-     pylint3 --load-plugins=pylint_odoo -d all -e odoolint ./itsys_addons/$line
+     pylint3 --load-plugins=pylint_odoo -d all -e odoolint ./backend_addons/$line
 #     flake8 ./backend_addons/$line
     echo "${blue}###################################################\n"
     echo "${yellow} Flake8 finish test addon :  ${green} $line ${reset}\n"
