@@ -15,6 +15,10 @@ mkdir  -p  /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
 
 cd /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/
 
+git clone https://ibnabbas:5C_3Fk1MWCXsrry8djD6@gitlab.com/itsys/demo-project.git
+
+cd /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/$CI_PROJECT_NAME/
+
 while IFS= read -r line
 do
     echo "${blue}###################################################\n"
