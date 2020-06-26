@@ -13,7 +13,7 @@ reset=`tput sgr0`
 rm -rf /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
 mkdir  -p  /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
 
-cd /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/custom/
+cd /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/
 
 while IFS= read -r line
 do
@@ -29,3 +29,5 @@ do
     echo "${reset}"
 
 done < ./project_scope
+
+rm -rf /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
