@@ -4,11 +4,7 @@
 #invoked on the command-line
 #invoked via Python
 
-yellow=`tput setaf 3`
-blue=`tput setaf 4`
-green=`tput setaf 2`
-
-reset=`tput sgr0`
+rm -rf /home/gitlab-runner/builds/Lxsoe-ry/0/*
 
 rm -rf /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
 mkdir  -p  /home/gitlab-runner/flake8/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
