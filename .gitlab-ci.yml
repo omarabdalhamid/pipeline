@@ -22,6 +22,8 @@ flake8:
     - lint_testing
   only:
     - merge_requests
+    - master
+
 
 OCA pylint_odoo:
   stage:  Lint_Testing
@@ -31,6 +33,7 @@ OCA pylint_odoo:
     - lint_testing
   only:
     - merge_requests
+    - master
 
 approve:
   stage: approve
@@ -42,7 +45,7 @@ approve:
   allow_failure: false 
   only:
     - merge_requests
-
+    - master
 Odoo_Unit_Testing:
    stage:  Unit_Testing
    script: 
@@ -51,3 +54,4 @@ Odoo_Unit_Testing:
     - unit_test
    only:
     - merge_requests
+    - master
