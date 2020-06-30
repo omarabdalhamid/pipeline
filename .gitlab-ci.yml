@@ -46,9 +46,7 @@ approve:
 Odoo_Unit_Testing:
    stage:  Unit_Testing
    script: 
-#      -  curl -Ssfl  https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/docker_test.sh |sh
-       -  export COMPOSE_INTERACTIVE_NO_CLI=1
-       -  docker exec -t e21e12a7c855 bash -c "odoo -d unit_test2 --db_host  db -w odoo --test-enable --test-tags  'standard,test_account_asset'"
+       -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/unit_test.sh |sh
    tags:
     - unit_test
    only:
