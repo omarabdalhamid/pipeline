@@ -4,6 +4,7 @@ stages:
    - approve
    - Unit_Testing
 
+
 Check_master:
   stage:  check
   script:
@@ -12,19 +13,24 @@ Check_master:
     - check
   only:
   - merge_requests
+
 flake8:
   stage:  Lint_Testing
   script:
     -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/flake8_test5.sh |sh
   tags:
     - lint_testing
-    
+  only:
+  - merge_requests
+
 OCA pylint_odoo:
   stage:  Lint_Testing
   script:
     -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/pylint_odoo5.sh |sh
   tags:
     - lint_testing
+  only:
+  - merge_requests
 
 approve:
   stage: approve
@@ -34,7 +40,8 @@ approve:
     - lint_testing  
   when: manual
   allow_failure: false 
-
+  only:
+  - merge_requests
 
 Odoo_Unit_Testing:
    stage:  Unit_Testing
@@ -44,3 +51,5 @@ Odoo_Unit_Testing:
        -  docker exec -t e21e12a7c855 bash -c "odoo -d unit_test2 --db_host  db -w odoo --test-enable --test-tags  'standard,test_account_asset'"
    tags:
     - unit_test
+  only:
+  - merge_requests
