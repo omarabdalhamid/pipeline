@@ -12,7 +12,7 @@ Check_master:
   tags:
     - check
   only:
-  - merge_requests
+    - merge_requests
 
 flake8:
   stage:  Lint_Testing
@@ -21,7 +21,7 @@ flake8:
   tags:
     - lint_testing
   only:
-  - merge_requests
+    - merge_requests
 
 OCA pylint_odoo:
   stage:  Lint_Testing
@@ -30,7 +30,7 @@ OCA pylint_odoo:
   tags:
     - lint_testing
   only:
-  - merge_requests
+    - merge_requests
 
 approve:
   stage: approve
@@ -41,7 +41,7 @@ approve:
   when: manual
   allow_failure: false 
   only:
-  - merge_requests
+    - merge_requests
 
 Odoo_Unit_Testing:
    stage:  Unit_Testing
@@ -51,5 +51,5 @@ Odoo_Unit_Testing:
        -  docker exec -t e21e12a7c855 bash -c "odoo -d unit_test2 --db_host  db -w odoo --test-enable --test-tags  'standard,test_account_asset'"
    tags:
     - unit_test
-  only:
-  - merge_requests
+   only:
+    - merge_requests
