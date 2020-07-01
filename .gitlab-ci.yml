@@ -28,7 +28,7 @@ flake8:
     - master
 
 
-OCA pylint_odoo:
+OCA_pylint_odoo:
   stage:  Python_Lint_Testing
   script:
     -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/pylint_odoo5.sh |sh
