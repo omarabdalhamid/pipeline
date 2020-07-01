@@ -4,8 +4,9 @@ stages:
    - Odoo_Unit_Testing
    - Build_Application
    - SelenuimHQ
-   - Code_Review
    - Cleaning
+   - Code_Review
+   - Deploy_Master_ENV
 
 
 Check_master:
@@ -139,3 +140,15 @@ Clean_SelenuimHQ_Stage:
   only:
     - merge_requests
     - master   
+ 
+Deploy_Master:
+  stage: Deploy_Master_ENV
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/update_master.sh |sh
+  environment:
+    name: Master
+    url: https://demo-project.master.itysys.net/
+  tags:
+    - staging
+  only:
+  - master
