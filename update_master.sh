@@ -4,5 +4,5 @@ docker-compose down
 git pull
 chmod -R 777 etc/
 chmod -R 777 backend_addons
-chmod -R 777 theme_ibnabbas
+chmod -R 777 theme_addons
 docker-compose up -d
