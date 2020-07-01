@@ -1,12 +1,15 @@
 stages:
-   - check
-   - Lint_Testing
-   - approve
-   - Unit_Testing
+   - Check_Updates
+   - Python_Lint_Testing
+   - Odoo_Unit_Testing
+   - Build_Application
+   - SelenuimHQ
+   - Code_Review
+   - Cleaning
 
 
 Check_master:
-  stage:  check
+  stage:  Check_Updates
   script:
     -  curl -sSfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/check_master.sh |sh
   tags:
@@ -15,7 +18,7 @@ Check_master:
     - merge_requests
 
 flake8:
-  stage:  Lint_Testing
+  stage: Python_Lint_Testing
   script:
     -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/flake8_test5.sh |sh
   tags:
@@ -26,7 +29,7 @@ flake8:
 
 
 OCA pylint_odoo:
-  stage:  Lint_Testing
+  stage:  Python_Lint_Testing
   script:
     -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/pylint_odoo5.sh |sh
   tags:
@@ -36,18 +39,17 @@ OCA pylint_odoo:
     - master
 
 approve:
-  stage: approve
+  stage: Code_Review
   script:
-    - echo Hello!
+    - echo " Project--> $CI_PROJECT_NAME \n  Branch_Name --> $CI_COMMIT_REF_NAME  \n Code has been Reviewed  and ready to merge into master" 
   tags:
-    - lint_testing  
-  when: manual
-  allow_failure: false 
+    - check
   only:
     - merge_requests
     - master
+
 Odoo_Unit_Testing:
-   stage:  Unit_Testing
+   stage:  Odoo_Unit_Testing
    script: 
        -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/unit_test.sh |sh
    tags:
@@ -55,3 +57,84 @@ Odoo_Unit_Testing:
    only:
     - merge_requests
     - master
+
+Build_Odoo_APP:
+  stage: Build_Application
+  script:
+    - echo " Building APP" 
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master
+
+Build_DB_postgres:
+  stage: Build_Application
+  script:
+    - echo " Building DB" 
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master
+    
+SelenuimHQ_E2E_Testing:
+  stage: SelenuimHQ
+  script:
+    - echo " Check Application on chrome" 
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master
+    
+Clean_Check_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Check Update has been cleaned"  
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master    
+
+Clean_Lint_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Python_Lint_Testing has been cleaned"  
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master    
+
+Clean_Unit_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Odoo_Unit_Testinghas been cleaned"  
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master    
+
+Clean_Building_Application_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Building_Application has been cleaned"  
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master   
+  
+
+Clean_SelenuimHQ_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage SelenuimHQ has been cleaned"  
+  tags:
+    - check
+  only:
+    - merge_requests
+    - master   
