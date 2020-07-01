@@ -44,6 +44,7 @@ approve:
     - echo " Project--> $CI_PROJECT_NAME \n  Branch_Name --> $CI_COMMIT_REF_NAME  \n Code has been Reviewed  and ready to merge into master" 
   tags:
     - check
+  when: manual  
   only:
     - merge_requests
     - master
