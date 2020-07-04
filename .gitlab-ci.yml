@@ -63,9 +63,9 @@ Odoo_Unit_Testing:
 Build_Odoo_APP:
   stage: Build_Application
   script:
-    - echo " Building APP" 
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/build_odoo.sh |sh 
   tags:
-    - check
+    - build
   only:
     - merge_requests
     - master
@@ -73,9 +73,9 @@ Build_Odoo_APP:
 Build_DB_postgres:
   stage: Build_Application
   script:
-    - echo " Building DB" 
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/build_odoo.sh |sh  
   tags:
-    - check
+    - build
   only:
     - merge_requests
     - master
