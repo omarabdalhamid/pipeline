@@ -48,7 +48,6 @@ approve:
   when: manual  
   only:
     - merge_requests
-    - master
 
 Odoo_Unit_Testing:
    stage:  Odoo_Unit_Testing
@@ -57,6 +56,16 @@ Odoo_Unit_Testing:
    tags:
     - unit_test
    only:
+    - merge_requests
+    - master
+
+Build_DB_postgres:
+  stage: Build_Application
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/build_postgres.sh |sh  
+  tags:
+    - build
+  only:
     - merge_requests
     - master
 
@@ -70,22 +79,13 @@ Build_Odoo_APP:
     - merge_requests
     - master
 
-Build_DB_postgres:
-  stage: Build_Application
-  script:
-    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/build_odoo.sh |sh  
-  tags:
-    - build
-  only:
-    - merge_requests
-    - master
     
-SelenuimHQ_E2E_Testing:
+SeleniumHQ_E2E_Testing:
   stage: SelenuimHQ
   script:
-    - echo " Check Application on chrome" 
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/e2e_testing.sh |sh
   tags:
-    - check
+    - build
   only:
     - merge_requests
     - master
