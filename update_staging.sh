@@ -1,5 +1,5 @@
 #!/bin/bash
-cd //home/gitlab-runner/env/demo-project/staging/demo-project/
+cd  /home/gitlab-runner/env/demo-project/staging/demo-project/
 docker-compose -p staging down
 git pull
 chmod -R 777 etc/
