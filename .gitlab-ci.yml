@@ -7,6 +7,7 @@ stages:
    - Cleaning
    - Code_Review
    - Deploy_Master_ENV
+   - Deploy_Staging_ENV
 
 
 Check_master:
@@ -152,3 +153,16 @@ Deploy_Master:
     - staging
   only:
   - master
+  
+Deploy_Staging:
+  stage: Deploy_Staging_ENV
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/update_staging.sh |sh
+  environment:
+    name: staging
+    url: https://demo-project.staging.itysys.net/
+  tags:
+    - staging
+  when: manual  
+  only:
+  - master  
