@@ -162,7 +162,7 @@ Deploy_Staging:
     name: staging
     url: https://demo-project.staging.itysys.net/
   tags:
-    - staging
+    - build
   when: manual  
   only:
   - master  
