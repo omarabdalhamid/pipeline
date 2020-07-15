@@ -1,0 +1,200 @@
+image: packagez/node-docker-git
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  GIT_STRATEGY: clone
+  GIT_SUBMODULE_STRATEGY: recursive
+  
+services:
+  - docker:19.03.1-dind
+
+before_script:
+  - which docker && docker swarm init || true
+  - which docker && echo "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  - cd cli && npm i && npm link && cd ..
+
+stages:
+  - check
+  - lint
+  - unit
+  - build
+  - e2e
+  - release
+  - publish
+  - cleanup
+
+changes:
+  stage: check
+  script:
+    - git diff --exit-code --name-only  origin/master..HEAD && (echo 'No changes = No pipeline' && exit 1)
+    - if git diff --name-status --exit-code origin/master..HEAD ui > /dev/null; then UIMODIFIED="0"; else UIMODIFIED="1"; fi
+    - if git diff --name-status --exit-code origin/master..HEAD ui/**/*.spec.ts > /dev/null; then UITESTMODIFIED="0"; else UITESTMODIFIED="1"; fi
+    - if [ $UIMODIFIED = '1' -a $UITESTMODIFIED = '0' ]; then echo 'You must add or change spec.ts if you add or change anything in ui/'; exit 1; fi
+    - if git diff --name-status --exit-code origin/master..HEAD app > /dev/null; then APPMODIFIED="0"; else APPMODIFIED="0"; fi
+    - if git diff --name-status --exit-code origin/master..HEAD tests > /dev/null; then APPTESTMODIFIED="1"; else APPTESTMODIFIED="0"; fi
+    - if [ $APPMODIFIED = '1' -a $APPTESTMODIFIED = '0' ]; then echo 'You must add or change tests/ if you add or change anything in app/'; exit 1; fi
+  only:
+    - merge_requests
+
+master:
+  stage: check
+  script:
+    - if [ $(git rev-list --left-right --count origin/master...HEAD | awk '{print $1}') != '0' ]; then echo 'Dont waste pipeline time on out of date branches' && exit 1; fi
+  only:
+    - merge_requests
+
+#changelog:
+#  stage: check
+#  script:
+#   - (git diff --name-status origin/master..HEAD CHANGELOG.md | grep -q 'M\t') || (echo 'You must edit CHANGELOG.md' && exit 1)
+#  only:
+#    - merge_requests
+
+ui lint:
+  image: node:12-alpine
+  stage: lint
+  only:
+    - merge_requests
+    - /^master$/
+    - tags
+  script:
+    - apk add git
+    - cd ui && npm i && npm run -s prepush
+
+php lint:
+  image: packagez/node-docker-php
+  stage: lint
+  only:
+    - /^master$/
+    - tags
+    - merge_requests
+  script:
+    - composer install && php -d memory_limit=1G ./vendor/bin/phpstan analyze app/
+
+build:
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  stage: build
+  script:
+    - zisoft build --docker --sass --website --composer --app --ui --prod --clean
+    - zisoft package --ci --push --prefix $CI_REGISTRY --tag $CI_PIPELINE_ID
+  cache:
+    key: ui_cache
+    paths:
+      - $CI_PROJECT_DIR/ui/
+  artifacts:
+    when: always
+    paths:
+    - $CI_PROJECT_DIR/ui/*
+
+api unit testing:
+  image: packagez/node-docker-php
+  stage: unit
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  script:
+    - apk add php7-xdebug --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+    - echo 'zend_extension=/usr/lib/php7/modules/xdebug.so' >> /etc/php7/php.ini
+    - echo 'xdebug.coverage_enable=1' >> /etc/php7/php.ini
+    - echo 'xdebug.remote_enable=1' >> /etc/php7/php.ini
+    - echo 'xdebug.remote_connect_back=1' >> /etc/php7/php.ini
+    - echo 'xdebug.remote_log=/tmp/xdebug.log' >> /etc/php7/php.ini
+    - echo 'xdebug.remote_autostart=true' >> /etc/php7/php.ini
+    - composer install && zisoft test:unit:api
+  artifacts:
+    when: always
+    paths:
+    - $CI_PROJECT_DIR/storage/logs/*
+    - $CI_PROJECT_DIR/report/*
+
+ui unit testing:
+  image: packagez/node-docker-phantomjs
+  stage: unit
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  script:
+    - zisoft test:unit:ui
+  artifacts:
+    when: always
+    paths:
+      - $CI_PROJECT_DIR/ui/coverage/*
+
+integration testing:
+  image: packagez/node-docker-phantomjs
+  stage: e2e
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  script:
+    - zisoft deploy --ci
+    - zisoft test:e2e
+  artifacts:
+    when: always
+    paths:
+      - $CI_PROJECT_DIR/report/*
+  cache:
+      key: ui_cache
+
+clean up:
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  when: always
+  stage: cleanup
+  script:
+    - sleep 30
+
+release:
+  stage: release
+  only:
+    - /^master$/
+    - merge_requests
+    - tags
+  script:
+    - apk add git
+    - apk add zip
+    - zisoft release 
+  artifacts:
+    when: on_success
+    paths:
+    - $CI_PROJECT_DIR/zisoft*.zip
+  cache:
+      key: ui_cache
+
+
+pages_: # dummy just for testing
+  stage: publish
+  script:
+    - zisoft build --docker --website
+    - rm -fr public
+    - mkdir public
+    - mv website/build/awareness3.1/* public
+  artifacts:
+    paths:
+    - public
+  only:
+    - /^master$/
+    - merge_requests
+
+pages:
+  stage: publish
+  script:
+    - zisoft build --docker --website
+    - rm -fr public
+    - mkdir public
+    - mv website/build/awareness3.1/* public
+  artifacts:
+    paths:
+    - public
+  only:
+    - tags
