@@ -1,0 +1,124 @@
+# ? Stages Sorted
+stages:
+  - Changes
+  - Lint
+  - Build
+  - Tests
+  - Deployment
+
+####################################################################################################
+
+# ? Get Runner Image
+image: registry.gitlab.com/zisoft/virtual_event_platform/ext:version1.0
+
+# ? Set Variables for mysql
+variables:
+  MYSQL_ROOT_PASSWORD: secret
+  MYSQL_USER: zisoft
+  MYSQL_PASSWORD: secret
+  MYSQL_DATABASE: virtual
+  DB_HOST: mysql
+
+####################################################################################################
+
+# TODO: Check Changelog
+Changes:
+  # The Current Job Stage
+  stage: Changes
+
+  # Script to Execute
+  script:
+    - git diff --exit-code --name-only  https://pipeline:kMytySxMXpxzgbpusTvz@gitlab.com/zisoft/virtual_Event_Platform.git HEAD && (echo 'No changes = No pipeline' && exit 1)
+    - if [ $(git rev-list --left-right --count https://pipeline:kMytySxMXpxzgbpusTvz@gitlab.com/zisoft/virtual_Event_Platform.git HEAD | awk '{print $1}') != '0' ]; then echo 'Dont waste pipeline time on out of date branches' && exit 1; fi
+
+####################################################################################################
+
+# TODO: Lint the changed PHP files
+PHP Lint:
+  # The Current Job Stage
+  stage: Lint
+
+  # Script to Execute
+  script:
+    - master_commit=$(git ls-remote https://pipeline:yAQPRMkCy3fzsubhvvbm@gitlab.com/zisoft/virtual_Event_Platform.git HEAD | awk '{ print $1}')
+    - FILES=$(git diff --name-only $CI_COMMIT_SHA  $master_commit)
+    - if [ -n "$FILES" ]; then phpcs $FILES --standard=PSR2 --extension=php; fi
+    - if [ -z "$FILES" ]; then echo 'No files to check'; exit 1;fi
+
+####################################################################################################
+
+# TODO: Compile the Laravel Project & Install Dependencies
+composer:
+  # The Current Job Stage
+  stage: Build
+
+  # Script to Execute
+  script:
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+    - cp .env.example .env
+    - php artisan key:generate
+
+  artifacts:
+    # (Optional) Give it an expiration date,
+    # after that period you won't be able to
+    # download them via the UI anymore.
+    expire_in: 1 day
+
+    # Define what to output from the job.
+    paths:
+      - vendor/
+      - .env
+
+  cache:
+    # The variable CI_COMMIT_REF_SLUG
+    # refers to the slug of the branch.
+    # For example: `master` for the master branch.
+    # We use the `composer` suffix to avoid conflicts with
+    # the `npm` cache that we'll define next.
+    key: ${CI_COMMIT_REF_SLUG}-composer
+
+    # Define what to cache.
+    paths:
+      - vendor/
+
+####################################################################################################
+
+# TODO: Build npm for vue testing
+npm:
+  # Same stage as `composer` so that they run in parallel.
+  stage: Build
+
+  # Cache the `node_modules` folder
+  # using the `npm` suffix on the key.
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-npm
+    paths:
+      - node_modules/
+
+  # Install and compile.
+  script:
+    - npm install
+    - npm run production
+
+  # Provide the other jobs of the pipeline with
+  # the node dependencies and the compiled assets.
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - node_modules/
+      - public/css/
+      - public/js/
+
+####################################################################################################
+
+# TODO: Execute PHP Unit Tests in memory (Sqlite)
+
+PHP Unit:
+  # Test the backend Api
+  stage: Tests
+
+  dependencies:
+    - composer
+
+  script:
+    - php artisan test
