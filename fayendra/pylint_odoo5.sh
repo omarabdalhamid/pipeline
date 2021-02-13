@@ -15,7 +15,9 @@ mkdir  -p  /home/gitlab-runner/pylint/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA
 
 cd /home/gitlab-runner/pylint/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/
 
-git clone https://fayendra:bGwcaaMx8u74AuqDyJRc@gitlab.com/itsys/demo-project.git
+git clone https://fayendra:bGwcaaMx8u74AuqDyJRc@gitlab.com/fayendra/Fayendra.git
+
+
 
 cd /home/gitlab-runner/pylint/$CI_PROJECT_NAME/$CI_COMMIT_SHORT_SHA/$CI_PROJECT_NAME/
 
