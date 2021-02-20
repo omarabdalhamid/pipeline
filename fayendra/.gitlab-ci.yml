@@ -1,0 +1,130 @@
+stages:
+   - Check_Updates
+   - Python_Lint_Testing
+   - Odoo_Unit_Testing
+   - Build_Application
+   - SelenuimHQ
+   - Cleaning
+   - Code_Review
+   - Update_Staging
+
+
+Check_master:
+  stage:  Check_Updates
+  script:
+    -  curl -sSfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/check_master.sh |sh
+
+  only:
+    - merge_requests
+
+flake8:
+  stage: Python_Lint_Testing
+  script:
+    -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/flake8_test5.sh |sh
+  only:
+    - merge_requests
+    - master
+
+
+OCA_pylint_odoo:
+  stage:  Python_Lint_Testing
+  script:
+    -  curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/pylint_odoo5.sh |sh
+  only:
+    - merge_requests
+    - master
+
+approve:
+  stage: Code_Review
+  script:
+    - echo " Project--> $CI_PROJECT_NAME \n  Branch_Name --> $CI_COMMIT_REF_NAME  \n Code has been Reviewed  and ready to merge into master" 
+  when: manual  
+  only:
+    - merge_requests
+
+Odoo_Unit_Testing:
+   stage:  Odoo_Unit_Testing
+   script: 
+       -  echo "No unit tests found "
+   only:
+    - merge_requests
+    - master
+
+Build_DB_postgres:
+  stage: Build_Application
+  script:
+    - echo "No need to build , there is no unit test "  
+  only:
+    - merge_requests
+    - master
+
+Build_Odoo_APP:
+  stage: Build_Application
+  script:
+    - echo "No need to build , there is no unit test " 
+  only:
+    - merge_requests
+    - master
+
+    
+SeleniumHQ_E2E_Testing:
+  stage: SelenuimHQ
+  script:
+    - echo "No need to build , there is no e2e test " 
+  only:
+    - merge_requests
+    - master
+    
+Clean_Check_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Check Update has been cleaned"  
+  only:
+    - merge_requests
+    - master    
+
+Clean_Lint_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Python_Lint_Testing has been cleaned"  
+  only:
+    - merge_requests
+    - master    
+
+Clean_Unit_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Odoo_Unit_Testinghas been cleaned"  
+  only:
+    - merge_requests
+    - master    
+
+Clean_Building_Application_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage Building_Application has been cleaned"  
+  only:
+    - merge_requests
+    - master   
+  
+
+Clean_SelenuimHQ_Stage:
+  stage: Cleaning
+  script:
+    - echo "Stage SelenuimHQ has been cleaned"  
+  only:
+    - merge_requests
+    - master   
+ 
+
+  
+Update_Staging:
+  stage: Update_Staging
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/update_staging.sh |sh
+  environment:
+    name: staging
+    url: http://fayendra.odoobee.com/
+  when: manual  
+  only:
+  - master 
