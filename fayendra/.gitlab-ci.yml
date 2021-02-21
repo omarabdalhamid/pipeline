@@ -7,6 +7,7 @@ stages:
    - Cleaning
    - Code_Review
    - Update_Staging
+   - Update_Production
 
 
 Check_master:
@@ -117,14 +118,47 @@ Clean_SelenuimHQ_Stage:
     - master   
  
 
-  
 Update_Staging:
   stage: Update_Staging
   script:
-    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/update_staging.sh |sh
+    - sh /home/gitlab-runner/fayendra-env/staging/update-staging.sh
   environment:
-    name: staging
+    name: Update-staging
     url: http://fayendra.odoobee.com/
+  when: manual  
+  only:
+  - master
+
+rollback_Staging:
+  stage: Update_Staging
+  script:
+    - sh /home/gitlab-runner/fayendra-env/staging/rollback-staging.sh
+  environment:
+    name: Rollback-staging
+    url: https://fayendra.odoobee.com/
+  when: manual  
+  only:
+  - master 
+  
+Update_Production:
+  stage: Update_Production
+  script:
+    - sh /home/gitlab-runner/fayendra-env/prod/update-prod.sh
+  environment:
+    name: Update-Production
+    url: https://www.fayendra.com/
+  when: manual  
+  only:
+  - master 
+
+
+rollback_Production:
+  stage: Update_Production
+  script:
+    - sh /home/gitlab-runner/fayendra-env/prod/rollback-prod.sh
+  environment:
+    name: Rollback-Production
+    url: https://www.fayendra.com/
   when: manual  
   only:
   - master 
