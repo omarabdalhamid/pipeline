@@ -5,7 +5,7 @@ stages:
 deploy_review:
   stage: deploy
   script:
-    - sh /home/gitlab-runner/deploy-review.sh
+    - review-game
   environment:
     name: review/$CI_COMMIT_BRANCH
     url: https://review.zigames.firmcom.net/$CI_COMMIT_SHORT_SHA/
@@ -18,7 +18,7 @@ deploy_review:
 stop_review:
   stage: deploy
   script:
-    - sh /home/gitlab-runner/remove-review.sh
+    - stop-review
   when: manual
   environment:
     name: review/$CI_COMMIT_BRANCH
