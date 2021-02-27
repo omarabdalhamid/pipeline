@@ -43,6 +43,7 @@ approve:
   when: manual  
   only:
     - merge_requests
+    - maintainers
 
 Odoo_Unit_Testing:
    stage:  Odoo_Unit_Testing
