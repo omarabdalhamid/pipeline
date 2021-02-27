@@ -8,6 +8,7 @@ stages:
    - Code_Review
    - Update_Staging
    - Update_Production
+   - Restore_Point
 
 
 Check_master:
@@ -63,6 +64,21 @@ Build_Odoo_APP:
   stage: Build_Application
   script:
     - echo "No need to build , there is no unit test " 
+  only:
+    - merge_requests
+    - master
+
+Package_Addons:
+  stage: Build_Application
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/artifact.sh |sh
+  after_script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/clean-addon.sh |sh
+  artifacts:
+   name: "addons-$CI_COMMIT_SHORT_SHA" 
+   paths:
+       - /home/gitlab-runner/artifact/$CI_COMMIT_SHORT_SHA/Fayendra/backend_addons
+   expire_in: 1 week
   only:
     - merge_requests
     - master
@@ -159,6 +175,14 @@ rollback_Production:
   environment:
     name: Rollback-Production
     url: https://www.fayendra.com/
+  when: manual  
+  only:
+  - master 
+  
+Restore_Point:
+  stage: Restore_Point
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/restore-point.sh |sh
   when: manual  
   only:
   - master 
