@@ -76,7 +76,7 @@ Package_Addons:
    name: "addons-$CI_COMMIT_SHORT_SHA" 
    paths:
        - backend_addons/*
-   expire_in: 1 week
+   expire_in: 4 weeks
   only:
     - merge_requests
     - master
