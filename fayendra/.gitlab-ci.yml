@@ -72,8 +72,6 @@ Package_Addons:
   stage: Build_Application
   script:
     - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/artifact.sh |sh
-  after_script:
-    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/clean-addon.sh |sh
   artifacts:
    name: "addons-$CI_COMMIT_SHORT_SHA" 
    paths:
@@ -115,6 +113,14 @@ Clean_Unit_Stage:
   only:
     - merge_requests
     - master    
+
+Clean_Artifacts:
+  stage: Cleaning
+  script:
+    - curl -Ssfl https://raw.githubusercontent.com/omarabdalhamid/pipeline/master/fayendra/clean-addon.sh |sh 
+  only:
+    - merge_requests
+    - master   
 
 Clean_Building_Application_Stage:
   stage: Cleaning
