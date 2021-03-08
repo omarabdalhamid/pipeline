@@ -8,6 +8,5 @@ deploy_review:
   environment:
     name: API-zigames
     url: https://zigames-api.firmcom.net
-    on_stop: stop_review
   only:
     - master
