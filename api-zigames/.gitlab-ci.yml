@@ -1,0 +1,13 @@
+stages:
+    - deploy
+
+deploy_review:
+  stage: deploy
+  script:
+    - sh /home/gitlab-runner/deploy-api.sh
+  environment:
+    name: API-zigames
+    url: https://zigames-api.firmcom.net
+    on_stop: stop_review
+  only:
+    - master
