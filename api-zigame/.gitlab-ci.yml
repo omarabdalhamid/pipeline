@@ -1,5 +1,6 @@
 stages:
     - deploy
+    - Check_Updates
 
 deploy_review:
   stage: deploy
@@ -10,3 +11,11 @@ deploy_review:
     url: https://zigames-api.firmcom.net
   only:
     - master
+    
+Check_master:
+  stage:  Check_Updates
+  script:
+    -  sh /home/gitlab-runner/checkmaster.sh
+
+  only:
+    - merge_requests
