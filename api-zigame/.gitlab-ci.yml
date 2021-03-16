@@ -19,3 +19,4 @@ Check_master:
 
   only:
     - merge_requests
+    - branchs
