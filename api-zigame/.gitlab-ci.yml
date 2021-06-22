@@ -12,6 +12,16 @@ deploy_review:
   only:
     - master
     
+deploy_review_basketball:
+  stage: deploy
+  script:
+    - sh /home/gitlab-runner/deploy-basketball-api.sh
+  environment:
+    name: API-Basketball
+    url: https://basketball-api.firmcom.net
+  only:
+    - basketball    
+    
 Check_master:
   stage:  Check_Updates
   script:
