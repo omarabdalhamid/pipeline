@@ -19,10 +19,8 @@ deploy_review_basketball:
   environment:
     name: API-Basketball
     url: https://basketball-api.firmcom.net
-rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "basketball"'    
-  only:
-    - basketball   
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "basketball"'  
     
 Check_master:
   stage:  Check_Updates
