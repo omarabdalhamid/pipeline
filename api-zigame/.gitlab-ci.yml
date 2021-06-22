@@ -20,7 +20,7 @@ deploy_review_basketball:
     name: API-Basketball
     url: https://basketball-api.firmcom.net
   only:
-    - basketball    
+    - branchs    
     
 Check_master:
   stage:  Check_Updates
