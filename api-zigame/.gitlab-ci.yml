@@ -12,13 +12,15 @@ deploy_review:
   only:
     - master
     
-deploy_review_basketball:basketball
+deploy_review_basketball:
   stage: deploy
   script:
     - sh /home/gitlab-runner/deploy-basketball-api.sh
   environment:
     name: API-Basketball
     url: https://basketball-api.firmcom.net
+rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "basketball"'    
   only:
     - basketball   
     
