@@ -1,0 +1,60 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+stages:
+- check_master  
+- test
+- AWS_Staging
+
+##### Job for Check Master ############
+
+check_master:
+    stage: check_master
+    image: bash
+    script:
+        - apk add git
+        - rm -rf ./$CI_COMMIT_SHORT_SHA
+        - mkdir ./$CI_COMMIT_SHORT_SHA
+        - cd  ./$CI_COMMIT_SHORT_SHA
+        - git clone https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/dscoola-front-end.git 
+        - cd $CI_PROJECT_NAME
+        - git checkout $CI_COMMIT_REF_NAME
+        - git rev-list HEAD > check_master.txt
+        - remote_master_sha=$(git ls-remote https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/dscoola-front-end.git HEAD | awk '{print $1}')
+        - | 
+           if grep -Fxq "$remote_master_sha"  ./check_master.txt
+           then
+               echo "Master Merged Successfully"
+               exit 0
+           else
+               echo "Please merger master before push to your branch"
+               exit 1 
+           fi
+
+############ End of check_master Job ########
+
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml
+
+###### End of SAST ############
+
+############## Start of Deploy Staging   Job ###########
+
+Deploy_Staging:
+  image: registry.gitlab.com/dscoola/dscoola-front-end:aws-staging
+  stage:  AWS_Staging
+  script:
+    -  ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@staging.dscoola.com' 'sh /gitlab/updatestaging.sh'
+
+  only:
+    - master
+    
+############## End  of Deploy Staging   Job ###########
