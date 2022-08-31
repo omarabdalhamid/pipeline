@@ -53,7 +53,6 @@ Deploy_Staging:
   stage:  AWS_Staging
   script:
     -  ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@staging.dscoola.com' 'sh /gitlab/updatestaging.sh'
-
   only:
     - master
     
