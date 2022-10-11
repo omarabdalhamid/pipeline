@@ -24,7 +24,7 @@ check_master:
         - cd $CI_PROJECT_NAME
         - git checkout $CI_COMMIT_REF_NAME
         - git rev-list HEAD > check_master.txt
-        - remote_master_sha=$(git ls-remote https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/dscoola-front-end.git HEAD | awk '{print $1}')
+        - remote_master_sha=$(git ls-remote https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/mdscoola.git  HEAD | awk '{print $1}')
         - | 
            if grep -Fxq "$remote_master_sha"  ./check_master.txt
            then
