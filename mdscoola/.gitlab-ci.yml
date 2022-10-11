@@ -20,7 +20,7 @@ check_master:
         - rm -rf ./$CI_COMMIT_SHORT_SHA
         - mkdir ./$CI_COMMIT_SHORT_SHA
         - cd  ./$CI_COMMIT_SHORT_SHA
-        - git clone https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/dscoola-front-end.git 
+        - git clone https://dscoola:r4xa1porykGjycj4CZPa@gitlab.com/dscoola/mdscoola.git 
         - cd $CI_PROJECT_NAME
         - git checkout $CI_COMMIT_REF_NAME
         - git rev-list HEAD > check_master.txt
