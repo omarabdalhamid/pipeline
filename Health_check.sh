@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-HealthCheckCode=$(curl  -Li  "$1"  -o /dev/null -w '%{http_code}\n' -s)
+HealthCheckCode=$(curl  -Li -k "$1"  -o /dev/null -w '%{http_code}\n' -s)
 
 echo "$HealthCheckCode"
 
