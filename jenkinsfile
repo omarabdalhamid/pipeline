@@ -1,0 +1,183 @@
+pipeline {
+    agent none
+    stages {
+
+// ####################### check master Stage ######################## 
+
+            // stage('Check_Master') {
+            //     agent {
+            //         docker { image 'bash' }
+            //     }
+            //     steps {
+                            
+            //         sh "apk add git"
+            //         sh "cd spring-angular-cicd && git checkout master"
+            //         sh "cd spring-angular-cicd && git rev-list HEAD > ../check_master.txt"
+            //         sh "remote_master_sha=$(git ls-remote https://spring:83uwGVMfNX2swyCRj-mL@gitlab.com/devops-course4960906/spring-angular-cicd.git HEAD | awk '{print $1}')"
+            //         sh "echo $remote_master_sha"
+            //         sh "cd spring-angular-cicd && cat ./check_master.txt"
+            //         sh '''
+            //             if grep -Fxq "$remote_master_sha"  ./check_master.txt
+            //             then
+            //                 echo "Master Merged Successfully"
+            //                 exit 0
+            //             else
+            //                 echo "Please merger master before push to your branch"
+            //                 exit 1 
+            //             fi
+            //         '''   
+            //     }
+            // }
+
+// ####################### Check Style Stage  ######################## 
+
+
+            stage('Check_Style') {
+                agent {
+                    docker { image 'maven:3.6.1-jdk-8-slim' }
+                }
+                steps { 
+                    sh " cd spring-angular-cicd/scrum-app &&  mvn checkstyle:checkstyle  pmd:pmd findbugs:findbugs"
+                }
+                post {
+                    always {
+                    recordIssues(
+                        enabledForFailure: true, aggregatingResults: true, 
+                        tools: [java(), checkStyle(pattern: 'spring-angular-cicd/scrum-app/target/checkstyle-result.xml', reportEncoding: 'UTF-8')]
+                        )               
+                    }
+                }   
+            }
+
+// ####################### Build APP  Stage ######################## 
+
+
+
+            stage('Build_APP') {
+               parallel { 
+
+                   // ############## job 1 build Angular #################
+                       
+                        stage('Build_Angular') {
+                            agent {
+                                docker { image 'node:12.7-alpine' }
+                            }
+                            steps {
+                                sh " cd spring-angular-cicd/scrum-ui &&  npm i && npm run-script build "
+
+                            }
+                
+                        }
+                    
+                    // ############## job 1 build Spring #################
+
+
+                        stage('Build_maven') {
+                            agent {
+                                docker { image 'maven:3.6.1-jdk-8-slim' }
+                            }
+                            steps {
+                                sh " cd spring-angular-cicd/scrum-app && mvn -f pom.xml clean package "
+
+                            }
+                        }
+
+               }
+                
+            }
+// ####################### Unit Testing Stage ######################## 
+  
+
+            stage('Unit_Testing') {
+                agent {
+                    docker { image 'maven:3.6.1-jdk-8-slim' }
+                }
+                steps {
+                    sh "cd spring-angular-cicd/scrum-app && mvn  -DskipCheckstyle test && mvn -DskipCheckstyle jacoco:report"
+                    sh "ls -lha spring-angular-cicd/scrum-app/target/surefire-reports/"
+                   
+                   step([$class: 'JUnitResultArchiver', testResults: 'spring-angular-cicd/scrum-app/target/surefire-reports/*.xml', healthScaleFactor: 1.0])
+                   junit 'spring-angular-cicd/scrum-app/target/surefire-reports/*.xml'
+                //     jacoco classPattern: 'spring-angular-cicd/scrum-app/target/classes', exclusionPattern: 'spring-angular-cicd/scrum-app/target/lib', execPattern: 'spring-angular-cicd/scrum-app/target/**.exec', inclusionPattern: 'spring-angular-cicd/scrum-app/target/*.class'
+                   
+                }
+
+             }
+        }
+    }
+
+// ####################### Postman_API_Testing ######################## 
+
+
+
+            // stage('Postman_API_Testing') {
+            //     agent {
+            //         docker { image 'postman/newman:alpine' }
+            //     }
+            //     options {
+            //         timeout(time: 1, unit: 'HOURS') 
+            //     }
+            //     steps { 
+            //           sh 'cd spring-angular-cicd/e2e/postman-api/ && newman run test-case1.json --reporters cli,junit,htmlextra --reporter-junit-export "newman_result.xml" --reporter-htmlextra-export "newman_result.html" '
+            //           junit "spring-angular-cicd/e2e/postman-api/*.xml"
+            //           publishHTML target: [
+            //                 allowMissing: false,
+            //                 alwaysLinkToLastBuild: false,
+            //                 keepAll: true,
+            //                 reportDir: '.',
+            //                 reportFiles: 'spring-angular-cicd/e2e/postman-api/newman_result.html',
+            //                 reportName: 'Newman HTML Reporter'
+            //          ]
+            //      }
+ 
+            // }
+
+
+// ####################### Deploy Review Stage ######################## 
+
+
+
+            stage('Review_APP') {
+                agent {
+                    docker { image 'registry.gitlab.com/devops-course4960906/spring-angular-cicd:aws' }
+                }
+                options {
+                    timeout(time: 1, unit: 'HOURS') 
+                }
+                steps { 
+                    sh "ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@server.spring.devops.saasx.io' ' sh /cicd-scrpits/devops/update-review.sh'"
+                }
+ 
+            }
+
+
+// ####################### Deploy staging Stage ######################## 
+
+
+            stage('Staging_APP') {
+                agent {
+                    docker { image 'registry.gitlab.com/devops-course4960906/spring-angular-cicd:aws' }
+                }
+                steps { 
+                    sh " ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@server.spring.devops.saasx.io' ' sh /cicd-scrpits/devops/update-staging.sh'"
+                }
+ 
+            }
+
+// ####################### Deploy Production Stage ######################## 
+
+
+            stage('Production_APP') {
+                agent {
+                    docker { image 'registry.gitlab.com/devops-course4960906/spring-angular-cicd:aws' }
+                }
+                steps { 
+                    sh "ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@server.spring.devops.saasx.io' ' sh /cicd-scrpits/devops/update-prod.sh'"
+                }
+ 
+            }
+
+
+// ####################### End Of Pipeline  ######################## 
+
+
