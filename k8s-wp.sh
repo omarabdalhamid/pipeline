@@ -69,6 +69,21 @@ spec:
   resources:
     requests:
       storage: 20Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: php-ini-config
+  namespace: wordpress
+data:
+  custom-php.ini: |
+    upload_max_filesize = 640M
+    post_max_size = 640M
+    max_execution_time = 6000
+    max_input_time = 3000
+    memory_limit = 2560M
+
+      
 
 ---
 
@@ -114,11 +129,16 @@ spec:
         volumeMounts:
         - name: wp-persistent-storage
           mountPath: /var/www/html
+        - name: php-ini
+          mountPath: /usr/local/etc/php/conf.d/custom-php.ini
+          subPath: custom-php.ini          
       volumes:
       - name: wp-persistent-storage
         persistentVolumeClaim:
           claimName: wp-pvc
-
+      - name: php-ini
+        configMap:
+          name: php-ini-config
 ---
 
 apiVersion: v1
