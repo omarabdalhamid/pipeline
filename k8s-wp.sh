@@ -1,0 +1,413 @@
+#!/bin/bash
+
+# Update package lists
+sudo apt update -y
+
+# Install MicroK8s
+sudo snap install microk8s --classic
+
+# Add the current user to the microk8s group
+sudo usermod -a -G microk8s $USER
+
+# Change ownership of the .kube directory
+sudo chown -f -R $USER ~/.kube
+
+# Alias microk8s and helm commands
+echo "alias kubectl='microk8s kubectl'" >> ~/.bashrc
+echo "alias helm='microk8s.helm3'" >> ~/.bashrc
+
+# Apply the changes to the current shell session
+source ~/.bashrc
+
+# Enable DNS, hostpath-storage, dashboard, cert-manager, and ingress
+microk8s enable dns hostpath-storage dashboard cert-manager ingress
+
+# Print completion message
+echo "MicroK8s installation and setup complete. Please log out and log back in to apply group changes."
+
+# Check the status of MicroK8s
+microk8s status --wait-ready
+
+# Create ClusterIssuer for cert-manager
+cat <<EOF | microk8s kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-cluster-issuer
+spec:
+  selfSigned: {}
+EOF
+
+# Create certificate for the Kubernetes dashboard
+cat <<EOF | microk8s kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubernetes-dashboard-cert
+  namespace: kube-system
+spec:
+  secretName: kubernetes-dashboard-certs
+  issuerRef:
+    name: selfsigned-cluster-issuer
+    kind: ClusterIssuer
+  commonName: kubernetes-dashboard.local
+  dnsNames:
+  - kubernetes-dashboard.local
+EOF
+
+# Create ingress for the Kubernetes dashboard
+cat <<EOF | microk8s kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboard-ingress
+  namespace: kube-system
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+spec:
+  rules:
+  - host: operation.odoobee.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 443
+  tls:
+  - hosts:
+    - kubernetes-dashboard.local
+    secretName: kubernetes-dashboard-certs
+EOF
+
+# Print instructions for adding the host to /etc/hosts
+echo "Please add the following entry to your /etc/hosts file:"
+echo "127.0.0.1 kubernetes-dashboard.local"
+
+# Display instructions for accessing the Kubernetes dashboard
+echo "To access the Kubernetes dashboard, open https://kubernetes-dashboard.local in your web browser."
+echo "You may need to ignore the SSL certificate warning, or set up a valid certificate."
+
+# Generate a token for accessing the Kubernetes dashboard
+echo "To generate an access token, use the following command:"
+echo "microk8s kubectl -n kube-system get secret | grep kubernetes-dashboard-token | awk '{print \$1}' | xargs microk8s kubectl -n kube-system describe secret | grep '^token' | awk '{print \$2}'"
+
+# Create YAML for WordPress, MySQL, phpMyAdmin, and TinyFileManager
+cat <<EOF > wordpress-setup.yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wordpress
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wp-pv
+  namespace: wordpress
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/wp-pv
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pvc
+  namespace: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: wordpress:php7.4
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql
+        - name: WORDPRESS_DB_USER
+          value: wpuser
+        - name: WORDPRESS_DB_PASSWORD
+          value: password
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: wp-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wp-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  namespace: wordpress
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: wordpress
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        - name: MYSQL_DATABASE
+          value: wordpress
+        - name: MYSQL_USER
+          value: wpuser
+        - name: MYSQL_PASSWORD
+          value: password
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  namespace: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+      - image: phpmyadmin/phpmyadmin
+        name: phpmyadmin
+        env:
+        - name: PMA_HOST
+          value: mysql
+        - name: PMA_USER
+          value: wpuser
+        - name: PMA_PASSWORD
+          value: password
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin
+  namespace: wordpress
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: phpmyadmin
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyfilemanager
+  namespace: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tinyfilemanager
+  template:
+    metadata:
+      labels:
+        app: tinyfilemanager
+    spec:
+      containers:
+      - image: tinyfilemanager/tinyfilemanager
+        name: tinyfilemanager
+        env:
+        - name: FILE_MANAGER_AUTH
+          value: wpuser:password
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: wp-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wp-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinyfilemanager
+  namespace: wordpress
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: tinyfilemanager
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wordpress-cert
+  namespace: wordpress
+spec:
+  secretName: wordpress-tls
+  issuerRef:
+    name: selfsigned-cluster-issuer
+    kind: ClusterIssuer
+  commonName: wordpress.odoobee.com
+  dnsNames:
+  - wordpress.odoobee.com
+  - phpmyadmin.local
+  - tinyfm.odoobee.com
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress-ingress
+  namespace: wordpress
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+spec:
+  rules:
+  - host: wordpress.odoobee.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wordpress
+            port:
+              number: 80
+  - host: phpmyadmin.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: phpmyadmin
+            port:
+              number: 80
+  - host: tinyfm.odoobee.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tinyfilemanager
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - wordpress.odoobee.com
+    - phpmyadmin.local
+    - tinyfm.odoobee.com
+    secretName: wordpress-tls
+EOF
+
+# Apply the WordPress setup YAML
+microk8s kubectl apply -f wordpress-setup.yml
+
+# Print instructions for adding hosts to /etc/hosts
+echo "Please add the following entries to your /etc/hosts file:"
+echo "127.0.0.1 wordpress.odoobee.com"
+echo "127.0.0.1 phpmyadmin.local"
+echo "127.0.0.1 tinyfm.odoobee.com"
+
+# Display instructions for accessing the services
+echo "To access WordPress, open https://wordpress.odoobee.com in your web browser."
+echo "To access phpMyAdmin, open https://phpmyadmin.local in your web browser."
+echo "To access TinyFileManager, open https://tinyfm.odoobee.com in your web browser."
+echo "You may need to ignore the SSL certificate warning, or set up a valid certificate."
