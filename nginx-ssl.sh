@@ -116,7 +116,7 @@ create_nginx_conf $DOMAIN3 $PORT3
 create_nginx_conf $DOMAIN4 $PORT4
 # Test Nginx configuration
 sudo nginx -t
-
+sudo sed -i 's|http://127|https://127|g' /etc/nginx/sites-available/$DOMAIN1
 # Reload Nginx to apply changes
 sudo systemctl reload nginx
 
