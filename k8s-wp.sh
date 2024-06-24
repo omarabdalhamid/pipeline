@@ -159,6 +159,16 @@ spec:
           value: password
         - name: WORDPRESS_DB_NAME
           value: wordpress
+
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        - name: MYSQL_DATABASE
+          value: wordpress
+        - name: MYSQL_USER
+          value: wpuser
+        - name: MYSQL_PASSWORD
+          value: password
+          
         ports:
         - containerPort: 80
         volumeMounts:
@@ -184,6 +194,20 @@ spec:
   selector:
     app: wordpress
 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: wordpress
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
 ---
 
 apiVersion: apps/v1
