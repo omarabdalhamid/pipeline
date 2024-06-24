@@ -12,7 +12,7 @@ DOMAIN3="phpmyadmin.odoobee.com"
 PORT3=30200
 #tiny File manager nginx domain  port 30300
 DOMAIN4="tinyfm.odoobee.com"
-PORT4=3033
+PORT4=30300
 
 # Update package list and install Nginx
 sudo apt update -y
