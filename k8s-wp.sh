@@ -36,10 +36,28 @@ echo "microk8s kubectl -n kube-system get secret | grep kubernetes-dashboard-tok
 
 # Create YAML for WordPress, MySQL, phpMyAdmin, and TinyFileManager
 cat <<EOF > wordpress-setup.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - port: 8443
+    targetPort: 8443
+    nodePort: 31000
+  selector:
+    k8s-app: kubernetes-dashboard
+
+---
+
 apiVersion: v1
 kind: Namespace
 metadata:
   name: wordpress
+
 
 ---
 
