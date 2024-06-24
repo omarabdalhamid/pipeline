@@ -28,67 +28,7 @@ echo "MicroK8s installation and setup complete. Please log out and log back in t
 # Check the status of MicroK8s
 microk8s status --wait-ready
 
-# Create ClusterIssuer for cert-manager
-cat <<EOF | microk8s kubectl apply -f -
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: selfsigned-cluster-issuer
-spec:
-  selfSigned: {}
-EOF
 
-# Create certificate for the Kubernetes dashboard
-cat <<EOF | microk8s kubectl apply -f -
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: kubernetes-dashboard-cert
-  namespace: kube-system
-spec:
-  secretName: kubernetes-dashboard-certs
-  issuerRef:
-    name: selfsigned-cluster-issuer
-    kind: ClusterIssuer
-  commonName: kubernetes-dashboard.local
-  dnsNames:
-  - kubernetes-dashboard.local
-EOF
-
-# Create ingress for the Kubernetes dashboard
-cat <<EOF | microk8s kubectl apply -f -
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: kubernetes-dashboard-ingress
-  namespace: kube-system
-  annotations:
-    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-spec:
-  rules:
-  - host: operation.odoobee.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: kubernetes-dashboard
-            port:
-              number: 443
-  tls:
-  - hosts:
-    - kubernetes-dashboard.local
-    secretName: kubernetes-dashboard-certs
-EOF
-
-# Print instructions for adding the host to /etc/hosts
-echo "Please add the following entry to your /etc/hosts file:"
-echo "127.0.0.1 kubernetes-dashboard.local"
-
-# Display instructions for accessing the Kubernetes dashboard
-echo "To access the Kubernetes dashboard, open https://kubernetes-dashboard.local in your web browser."
-echo "You may need to ignore the SSL certificate warning, or set up a valid certificate."
 
 # Generate a token for accessing the Kubernetes dashboard
 echo "To generate an access token, use the following command:"
@@ -187,13 +127,13 @@ metadata:
   name: wordpress
   namespace: wordpress
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     targetPort: 80
+    nodePort: 30100
   selector:
     app: wordpress
-
 
 ---
 
@@ -299,10 +239,11 @@ metadata:
   name: phpmyadmin
   namespace: wordpress
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     targetPort: 80
+    nodePort: 30200   # Specify the desired NodePort value here
   selector:
     app: phpmyadmin
 
@@ -347,91 +288,17 @@ metadata:
   name: tinyfilemanager
   namespace: wordpress
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     targetPort: 80
+    nodePort: 30300   # Specify the desired NodePort value here
   selector:
     app: tinyfilemanager
 
----
-
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: wordpress-cert
-  namespace: wordpress
-spec:
-  secretName: wordpress-tls
-  issuerRef:
-    name: selfsigned-cluster-issuer
-    kind: ClusterIssuer
-  commonName: wordpress.odoobee.com
-  dnsNames:
-  - wordpress.odoobee.com
-  - phpmyadmin.local
-  - tinyfm.odoobee.com
-
----
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: wordpress-ingress
-  namespace: wordpress
-  annotations:
-    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-spec:
-  rules:
-  - host: wordpress.odoobee.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: wordpress
-            port:
-              number: 80
-  - host: phpmyadmin.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: phpmyadmin
-            port:
-              number: 80
-  - host: tinyfm.odoobee.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: tinyfilemanager
-            port:
-              number: 80
-  tls:
-  - hosts:
-    - wordpress.odoobee.com
-    - phpmyadmin.local
-    - tinyfm.odoobee.com
-    secretName: wordpress-tls
 EOF
 
 # Apply the WordPress setup YAML
 microk8s kubectl apply -f wordpress-setup.yml
 
-# Print instructions for adding hosts to /etc/hosts
-echo "Please add the following entries to your /etc/hosts file:"
-echo "127.0.0.1 wordpress.odoobee.com"
-echo "127.0.0.1 phpmyadmin.local"
-echo "127.0.0.1 tinyfm.odoobee.com"
 
-# Display instructions for accessing the services
-echo "To access WordPress, open https://wordpress.odoobee.com in your web browser."
-echo "To access phpMyAdmin, open https://phpmyadmin.local in your web browser."
-echo "To access TinyFileManager, open https://tinyfm.odoobee.com in your web browser."
-echo "You may need to ignore the SSL certificate warning, or set up a valid certificate."
