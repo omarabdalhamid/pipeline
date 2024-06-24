@@ -17,7 +17,7 @@ echo "alias kubectl='microk8s kubectl'" >> ~/.bashrc
 echo "alias helm='microk8s.helm3'" >> ~/.bashrc
 
 # Apply the changes to the current shell session
-source ~/.bashrc
+source /root/.bashrc
 
 # Enable DNS, hostpath-storage, dashboard
 microk8s enable dns hostpath-storage dashboard 
@@ -204,7 +204,7 @@ spec:
         app: mysql
     spec:
       containers:
-      - image: mysql:5.7
+      - image: mysql:8.0
         name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
