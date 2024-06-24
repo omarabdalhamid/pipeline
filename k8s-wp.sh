@@ -131,17 +131,7 @@ spec:
         - name: WORDPRESS_DB_PASSWORD
           value: password
         - name: WORDPRESS_DB_NAME
-          value: wordpress
-
-        - name: MYSQL_ROOT_PASSWORD
-          value: rootpassword
-        - name: MYSQL_DATABASE
-          value: wordpress
-        - name: MYSQL_USER
-          value: wpuser
-        - name: MYSQL_PASSWORD
-          value: password
-          
+          value: wordpress          
         ports:
         - containerPort: 80
         volumeMounts:
