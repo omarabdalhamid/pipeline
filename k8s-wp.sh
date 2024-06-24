@@ -262,10 +262,6 @@ spec:
         env:
         - name: PMA_HOST
           value: mysql
-        - name: PMA_USER
-          value: wpuser
-        - name: PMA_PASSWORD
-          value: password
         ports:
         - containerPort: 80
 
