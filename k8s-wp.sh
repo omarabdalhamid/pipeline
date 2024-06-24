@@ -19,8 +19,8 @@ echo "alias helm='microk8s.helm3'" >> ~/.bashrc
 # Apply the changes to the current shell session
 source ~/.bashrc
 
-# Enable DNS, hostpath-storage, dashboard, cert-manager, and ingress
-microk8s enable dns hostpath-storage dashboard cert-manager ingress
+# Enable DNS, hostpath-storage, dashboard
+microk8s enable dns hostpath-storage dashboard 
 
 # Print completion message
 echo "MicroK8s installation and setup complete. Please log out and log back in to apply group changes."
