@@ -33,8 +33,8 @@ create_nginx_conf() {
   cat <<EOF | sudo tee /etc/nginx/sites-available/$DOMAIN
 server {
    server_name $DOMAIN;
-   if ($http_x_forwarded_proto = 'http'){
-     return 301 https://$host$request_uri;
+   if (\$http_x_forwarded_proto = 'http'){
+     return 301 https://\$host\$request_uri;
     }
 
 #     add_header 'Access-Control-Allow-Origin' '*' always;
@@ -76,11 +76,11 @@ server {
  proxy_send_timeout 400000000s;
  proxy_read_timeout 400000000s;
  proxy_pass  http://127.0.0.1:$PORT;
- proxy_set_header Host $host;
- proxy_set_header X-Forwarded-Host $host;
- proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
- proxy_set_header X-Forwarded-Proto $scheme;
- proxy_set_header X-Real-IP $remote_addr;
+ proxy_set_header Host \$host;
+ proxy_set_header X-Forwarded-Host \$host;
+ proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+ proxy_set_header X-Forwarded-Proto \$scheme;
+ proxy_set_header X-Real-IP \$remote_addr;
  proxy_redirect off;
  }
 
@@ -99,7 +99,7 @@ server {
 
 server {
     if ($host = $DOMAIN) {
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     } # managed by Certbot
 
    server_name $DOMAIN;
