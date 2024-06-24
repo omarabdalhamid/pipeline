@@ -2,21 +2,23 @@
 
 # Variables for domain names
 # Kubernetes dashboard domain port 3100
-DOMAIN1="example1.com"  
+DOMAIN1="operation.odoobee.com"  
 PORT1=31000
 # Wordpress nginx domain  port 30100
-DOMAIN2="example2.com"
+DOMAIN2="wordpress.odoobee.com"
 PORT2=30100
 # Phpmyadmin nginx domain port 30200
-DOMAIN3="example3.com"
+DOMAIN3="phpmyadmin.odoobee.com"
 PORT3=30200
 #tiny File manager nginx domain  port 30300
-DOMAIN3="example4.com"
+DOMAIN4="tinyfm.odoobee.com"
 PORT4=3033
 
 # Update package list and install Nginx
 sudo apt update -y
 sudo apt install -y nginx
+
+systemctl enable nginx --now
 
 # Install Certbot and the Nginx plugin
 sudo apt install -y certbot python3-certbot-nginx
@@ -84,21 +86,15 @@ server {
  proxy_redirect off;
  }
 
-
-
-
-
-
-
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem; # managed by Certbot
+#    listen 443 ssl; # managed by Certbot
+#    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem; # managed by Certbot
+#    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem; # managed by Certbot
 #    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
 #    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 
 server {
-    if ($host = $DOMAIN) {
+    if (\$host = $DOMAIN) {
         return 301 https://\$host\$request_uri;
     } # managed by Certbot
 
@@ -117,7 +113,7 @@ EOF
 create_nginx_conf $DOMAIN1 $PORT1
 create_nginx_conf $DOMAIN2 $PORT2
 create_nginx_conf $DOMAIN3 $PORT3
-
+create_nginx_conf $DOMAIN4 $PORT4
 # Test Nginx configuration
 sudo nginx -t
 
@@ -125,7 +121,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Obtain SSL certificates for the domains using Certbot
-for DOMAIN in $DOMAIN1 $DOMAIN2 $DOMAIN3
+for DOMAIN in $DOMAIN1 $DOMAIN2 $DOMAIN3 $DOMAIN4
 do
     sudo certbot --nginx -d $DOMAIN
 done
